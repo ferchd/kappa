@@ -1,27 +1,29 @@
-use crate::editor::Editor;
+use crate::state::EditorState;
+use crate::ui::theme::Theme;
 use ratatui::{
     layout::Rect,
-    style::{Color, Style},
+    style::Style,
     text::{Line, Span},
     widgets::Paragraph,
     Frame,
 };
 use unicode_width::UnicodeWidthStr;
 
-pub fn render_status_bar(f: &mut Frame, editor: &Editor, area: Rect) {
-    let buffer = editor.buffer();
-    let cursor = editor.cursor();
+pub fn render_status_bar(f: &mut Frame, state: &EditorState, area: Rect) {
+    let theme = Theme::default();
+    let document = state.document();
+    let cursor = state.cursor();
 
-    let modified = if buffer.is_modified() { " [+]" } else { "" };
+    let modified = if document.is_modified() { " [+]" } else { "" };
     let status = format!(
         " {} {}  Ln {}, Col {}",
-        buffer.file_name(),
+        document.file_name(),
         modified,
         cursor.line + 1,
         cursor.column + 1
     );
 
-    let line_count = format!(" {} lines ", buffer.len_lines());
+    let line_count = format!(" {} lines ", document.buffer().len_lines());
 
     let status_width = status.width();
     let line_count_width = line_count.width();
@@ -38,8 +40,11 @@ pub fn render_status_bar(f: &mut Frame, editor: &Editor, area: Rect) {
         Span::raw(line_count),
     ]);
 
-    let paragraph =
-        Paragraph::new(status_line).style(Style::default().bg(Color::DarkGray).fg(Color::White));
+    let paragraph = Paragraph::new(status_line).style(
+        Style::default()
+            .bg(theme.status_bar_bg)
+            .fg(theme.status_bar_fg),
+    );
 
     f.render_widget(paragraph, area);
 }

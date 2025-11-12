@@ -1,12 +1,16 @@
-#[derive(Debug, Clone)]
-pub struct Cursor {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CursorPosition {
     pub line: usize,
     pub column: usize,
 }
 
-impl Cursor {
+impl CursorPosition {
     pub fn new() -> Self {
         Self { line: 0, column: 0 }
+    }
+
+    pub fn at(line: usize, column: usize) -> Self {
+        Self { line, column }
     }
 
     pub fn move_to(&mut self, line: usize, column: usize) {
@@ -20,7 +24,7 @@ impl Cursor {
     }
 }
 
-impl Default for Cursor {
+impl Default for CursorPosition {
     fn default() -> Self {
         Self::new()
     }

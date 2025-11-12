@@ -1,4 +1,4 @@
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum EditorMode {
     Normal,
     CommandPalette,
@@ -19,7 +19,7 @@ impl EditorMode {
             EditorMode::CommandPalette => "Command Palette",
             EditorMode::OpenFile => "Open File",
             EditorMode::SaveAs => "Save As",
-            _ => "",
+            EditorMode::Normal => "",
         }
     }
 }

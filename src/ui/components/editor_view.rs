@@ -1,4 +1,6 @@
-use crate::editor::Editor;
+use crate::state::EditorState;
+use crate::ui::components::line_numbers::LineNumbers;
+use crate::ui::theme::Theme;
 use ratatui::{
     layout::{Position, Rect},
     style::{Color, Style},
@@ -7,10 +9,11 @@ use ratatui::{
     Frame,
 };
 
-pub fn render_editor(f: &mut Frame, editor: &Editor, area: Rect) {
-    let buffer = editor.buffer();
-    let scroll = editor.scroll_offset();
-    let cursor = editor.cursor();
+pub fn render_editor(f: &mut Frame, state: &EditorState, area: Rect) {
+    let theme = Theme::default();
+    let buffer = state.document().buffer();
+    let scroll = state.viewport().scroll_offset();
+    let cursor = state.cursor();
 
     let viewport_height = area.height as usize;
     let mut lines = Vec::new();
@@ -18,11 +21,10 @@ pub fn render_editor(f: &mut Frame, editor: &Editor, area: Rect) {
 
     for line_idx in scroll..end_line {
         if let Some(line_content) = buffer.line(line_idx) {
-            let line_num = format!("{:4} ", line_idx + 1);
+            let line_num = LineNumbers::format(line_idx);
             let line_text = line_content.trim_end_matches(&['\n', '\r'][..]).to_string();
 
-            let line_num_span = Span::styled(line_num, Style::default().fg(Color::DarkGray));
-
+            let line_num_span = Span::styled(line_num, Style::default().fg(theme.line_number));
             let text_span = Span::raw(line_text);
             lines.push(Line::from(vec![line_num_span, text_span]));
         }

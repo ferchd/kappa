@@ -1,3 +1,6 @@
+mod events;
+mod keybindings;
 mod handlers;
 
-pub use handlers::{handle_input, Action};
+pub use events::InputAction;
+pub use handlers::InputHandler;

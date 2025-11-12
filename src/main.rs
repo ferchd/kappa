@@ -1,12 +1,13 @@
 use crossterm::{
-    event::{self, Event},
+    event,
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
+use kappa::{EditorState, InputAction, InputHandler};
+use kappa::core::document::{Document, FileIO};
 use ratatui::{backend::CrosstermBackend, Terminal};
 use std::env;
 use std::io;
-use kappa::{ui, Editor};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     enable_raw_mode()?;
@@ -16,11 +17,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut terminal = Terminal::new(backend)?;
 
     let args: Vec<String> = env::args().collect();
-    let filename = args.get(1).cloned();
+    let document = if let Some(filename) = args.get(1) {
+        FileIO::load_from_file(filename)?
+    } else {
+        Document::new()
+    };
 
-    let mut editor = Editor::new(filename)?;
+    let mut state = EditorState::new(document);
+    state.viewport_mut().set_height(terminal.size()?.height as usize - 2);
 
-    let result = run_app(&mut terminal, &mut editor);
+    let result = run_app(&mut terminal, &mut state);
 
     disable_raw_mode()?;
     execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
@@ -31,22 +37,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 fn run_app<B: ratatui::backend::Backend>(
     terminal: &mut Terminal<B>,
-    editor: &mut Editor,
+    state: &mut EditorState,
 ) -> Result<(), Box<dyn std::error::Error>> {
     loop {
-        terminal.draw(|f| ui::render(f, editor))?;
+        terminal.draw(|f| kappa::ui::render(f, state))?;
 
-        if let Event::Key(key) = event::read()? {
-            if let Some(action) = kappa::input::handle_input(Event::Key(key), editor)? {
-                match action {
-                    kappa::input::Action::Quit => break,
-                    kappa::input::Action::Save => {
-                        if let Err(e) = editor.save() {
-                            editor.set_message(&format!("Save failed: {}", e));
-                        }
-                    }
-                    kappa::input::Action::Continue => {}
-                }
+        let event = event::read()?;
+        if let Some(action) = InputHandler::handle(event, state)? {
+            match action {
+                InputAction::Quit => break,
+                InputAction::Save => {}
+                InputAction::Continue => {}
             }
         }
     }
